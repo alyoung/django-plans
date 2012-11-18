@@ -4,17 +4,26 @@ from plans.taxation import TaxationPolicy
 
 class RussianTaxationPolicy(TaxationPolicy):
     """
-    FIXME: description needed
+    This taxation policy should be correct for all countries. It uses following rules:
+        * return **default tax** in cases:
+            * if issuer is not applied simplified taxation.
+            * if issuer country and customer country are the same,
+        * return tax not applicable (``None``) in cases:
+            * if issuer is applied simplified taxation.
+            * if issuer country and customer country are **not** not the same,
+
+    Please note, that term "private person" refers in system to user that did not provide tax ID and
+    ``company`` refers to user that provides it.
 
     """
 
-#   This could be inherited unless there is a reason to be custom
-#    def get_default_tax(self):
-#        return getattr(settings, 'TAX', None)
-#
-#    def get_issuer_country_code(self):
-#        return getattr(settings, 'TAX_COUNTRY', None)
-
     def get_tax_rate(self, tax_id, country_code):
-        # TODO
-        return 0
+        if getattr(settings, 'TAXATION_SIMPLE', True):
+            return None
+
+        issuer_country = self.get_issuer_country_code()
+
+        if country_code.upper() != issuer_country.upper():
+            return None
+
+        return self.get_default_tax()

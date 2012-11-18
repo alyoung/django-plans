@@ -206,15 +206,10 @@ class CreateOrderView(CreateView):
             self.tax = taxation_policy.get_tax_rate(tax_number, country)
             self.request.session[tax_session_key] = (self.tax, )
 
-        if self.tax is not None:
-            self.tax_total = (self.amount * (self.tax) / 100).quantize(Decimal('1.00'))
-        else:
-            self.tax_total = None
+        self.tax_total = self.amount * (self.tax or 0) / 100
+        self.tax_total = self.tax_total.quantize(Decimal('1.00'))
 
-        if self.tax_total is None:
-            self.total = self.amount
-        else:
-            self.total = self.amount + self.tax_total
+        self.total = self.amount + self.tax_total
 
     def get_all_context(self):
         self.plan_pricing = get_object_or_404(PlanPricing.objects.all().select_related('plan', 'pricing'),
